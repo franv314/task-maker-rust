@@ -60,32 +60,32 @@ impl CursesUI {
 
         let text = vec![
             Line::from(vec![
-                Span::styled("Solution:        ", *BOLD),
+                Span::styled("Solution:        ", BOLD),
                 Span::raw(state.solution.to_string_lossy().to_string()),
             ]),
             Line::from(vec![
-                Span::styled("Generator args:  ", *BOLD),
+                Span::styled("Generator args:  ", BOLD),
                 Span::raw(state.generator_args.iter().join(" ")),
             ]),
             Line::from(vec![
-                Span::styled("Batch size:      ", *BOLD),
+                Span::styled("Batch size:      ", BOLD),
                 Span::raw(state.batch_size.to_string()),
             ]),
             Line::from(vec![
-                Span::styled("Batch index:     ", *BOLD),
+                Span::styled("Batch index:     ", BOLD),
                 Span::raw(shared.batch_index.to_string()),
             ]),
-            Line::from(vec![Span::styled("Progress:", *BLUE)]),
+            Line::from(vec![Span::styled("Progress:", BLUE)]),
             Line::from(vec![
-                Span::styled("    Generated:   ", *BOLD),
+                Span::styled("    Generated:   ", BOLD),
                 Span::raw(state.progress.inputs_generated.to_string()),
             ]),
             Line::from(vec![
-                Span::styled("    Solved:      ", *BOLD),
+                Span::styled("    Solved:      ", BOLD),
                 Span::raw(state.progress.inputs_solved.to_string()),
             ]),
             Line::from(vec![
-                Span::styled("    Average gen: ", *BOLD),
+                Span::styled("    Average gen: ", BOLD),
                 Span::raw(format!(
                     "{:.3}s\n",
                     state.progress.generator_time_sum
@@ -93,14 +93,14 @@ impl CursesUI {
                 )),
             ]),
             Line::from(vec![
-                Span::styled("    Average sol: ", *BOLD),
+                Span::styled("    Average sol: ", BOLD),
                 Span::raw(format!(
                     "{:.3}s",
                     state.progress.solution_time_sum / (state.progress.inputs_solved.max(1) as f64)
                 )),
             ]),
             Line::from(vec![
-                Span::styled("    Errors:      ", *BOLD),
+                Span::styled("    Errors:      ", BOLD),
                 Span::raw(errors.to_string()),
             ]),
         ];
@@ -139,9 +139,9 @@ impl CursesUI {
             TestcaseStatus::Solving => Span::raw("s"),
             TestcaseStatus::Solved => Span::raw("S"),
             TestcaseStatus::Checking => Span::raw("c"),
-            TestcaseStatus::Success => Span::styled("✓", *GREEN),
-            TestcaseStatus::Failed(_) => Span::styled("✕", *RED),
-            TestcaseStatus::Error => Span::styled("!", *RED),
+            TestcaseStatus::Success => Span::styled("✓", GREEN),
+            TestcaseStatus::Failed(_) => Span::styled("✕", RED),
+            TestcaseStatus::Error => Span::styled("!", RED),
         }
     }
 }

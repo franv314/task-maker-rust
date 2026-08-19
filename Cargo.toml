@@ -148,7 +148,6 @@ speculoos = "0.13"
 supports-color = "3"
 tabox = "1"
 tempfile = "3.25"
-termcolor = "1"
 termion = "4"
 thiserror = "2.0"
 tokio = { version = "1.50.0", features = ["full"] }

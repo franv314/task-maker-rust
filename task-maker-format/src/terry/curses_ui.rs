@@ -169,15 +169,15 @@ fn evaluation_outcome<'a>(outcome: Option<&Result<SolutionOutcome, String>>) -> 
                 .zip(outcome.feedback.cases.iter())
             {
                 match val.status {
-                    CaseStatus::Missing => res.push(Span::styled("m ", *YELLOW)),
+                    CaseStatus::Missing => res.push(Span::styled("m ", YELLOW)),
                     CaseStatus::Parsed => {
                         if feed.correct {
-                            res.push(Span::styled("c ", *GREEN))
+                            res.push(Span::styled("c ", GREEN))
                         } else {
-                            res.push(Span::styled("w ", *RED))
+                            res.push(Span::styled("w ", RED))
                         }
                     }
-                    CaseStatus::Invalid => res.push(Span::styled("i ", *RED)),
+                    CaseStatus::Invalid => res.push(Span::styled("i ", RED)),
                 }
             }
             res
@@ -202,11 +202,11 @@ fn evaluation_score<'a>(max_score: f64, state: &SolutionState, loading: char) ->
             if let Some(Ok(outcome)) = &state.outcome {
                 let score = format!("{:>3.0}", outcome.score * max_score);
                 if abs_diff_eq!(outcome.score, 0.0) {
-                    Span::styled(score, *RED)
+                    Span::styled(score, RED)
                 } else if abs_diff_eq!(outcome.score, 1.0) {
-                    Span::styled(score, *GREEN)
+                    Span::styled(score, GREEN)
                 } else {
-                    Span::styled(score, *YELLOW)
+                    Span::styled(score, YELLOW)
                 }
             } else {
                 Span::raw(format!(" {loading} "))

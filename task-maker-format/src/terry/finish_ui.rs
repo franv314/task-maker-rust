@@ -1,8 +1,9 @@
+use std::io;
 use std::path::Path;
 
+use anstream::AutoStream;
 use itertools::Itertools;
 use task_maker_dag::{ExecutionResult, ExecutionStatus};
-use termcolor::{ColorChoice, StandardStream};
 
 use crate::terry::ui_state::{SolutionState, SolutionStatus, UIState};
 use crate::terry::CaseStatus;
@@ -12,13 +13,13 @@ use crate::{cwrite, cwriteln};
 /// UI that prints to `stdout` the ending result of the evaluation of a IOI task.
 pub struct FinishUI {
     /// Stream where to print to.
-    stream: StandardStream,
+    stream: AutoStream<io::Stdout>,
 }
 
 impl FinishUITrait<UIState> for FinishUI {
     fn print(state: &UIState) {
         let mut ui = FinishUI {
-            stream: StandardStream::stdout(ColorChoice::Auto),
+            stream: anstream::stdout(),
         };
 
         ui.print_task_info(state);

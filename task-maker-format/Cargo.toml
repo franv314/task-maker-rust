@@ -19,8 +19,6 @@ serde_yaml = { workspace = true }
 anyhow = { workspace = true, features = ["backtrace"] }
 # General iterator utilities
 itertools = { workspace = true }
-# Utilities for writing to the terminal with colors
-termcolor = { workspace = true }
 # Checks if the terminal supports the colors
 supports-color = { workspace = true }
 # Logging
@@ -65,6 +63,8 @@ blake3 = { workspace = true }
 locale-codes = "0.3.0"
 toml = { version = "1.0.1", features = ["preserve_order"] }
 indexmap = { version = "2.13.0", features = ["serde"] }
+owo-colors = "4.3.0"
+anstream = "1.0.0"
 
 [dev-dependencies]
 tempfile = { workspace = true }

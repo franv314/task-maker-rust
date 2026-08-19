@@ -54,6 +54,8 @@ pub mod terry;
 mod testcase_score_status;
 pub mod ui;
 
+pub use owo_colors;
+
 lazy_static! {
     /// Directory where the data files are stored. It is taken from the `TM_DATA_DIR` environment
     /// variable if present, otherwise it will be defaulted to the path of the source tree.

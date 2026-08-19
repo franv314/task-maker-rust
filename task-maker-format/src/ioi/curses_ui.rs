@@ -184,11 +184,11 @@ fn ui_execution_status_text(status: &UIExecutionStatus, loading: char) -> Span<'
                         return Span::raw("I");
                     }
                     _ => {
-                        return Span::styled("F", *RED);
+                        return Span::styled("F", RED);
                     }
                 }
             }
-            Span::styled("S", *GREEN)
+            Span::styled("S", GREEN)
         }
     }
 }
@@ -221,13 +221,13 @@ fn generation_status_text(status: &TestcaseGenerationStatus, loading: char) -> S
     match status {
         TestcaseGenerationStatus::Pending => Span::raw("."),
         TestcaseGenerationStatus::Generating => Span::raw(format!("{loading}")),
-        TestcaseGenerationStatus::Generated => Span::styled("G", *GREEN),
+        TestcaseGenerationStatus::Generated => Span::styled("G", GREEN),
         TestcaseGenerationStatus::Validating => Span::raw(format!("{loading}")),
-        TestcaseGenerationStatus::Validated => Span::styled("V", *GREEN),
+        TestcaseGenerationStatus::Validated => Span::styled("V", GREEN),
         TestcaseGenerationStatus::Solving => Span::raw(format!("{loading}")),
-        TestcaseGenerationStatus::Solved => Span::styled("S", *GREEN),
-        TestcaseGenerationStatus::Failed => Span::styled("F", *RED),
-        TestcaseGenerationStatus::Skipped => Span::styled("s", *YELLOW),
+        TestcaseGenerationStatus::Solved => Span::styled("S", GREEN),
+        TestcaseGenerationStatus::Failed => Span::styled("F", RED),
+        TestcaseGenerationStatus::Skipped => Span::styled("s", YELLOW),
     }
 }
 
@@ -277,9 +277,9 @@ fn evaluation_score<'a>(state: &'a UIState, solution: &Path, loading: char) -> S
     };
     if let Some(score) = sol_state.score {
         match ScoreStatus::from_score(score, state.max_score) {
-            ScoreStatus::WrongAnswer => Span::styled(format!(" {score:>3.0} "), *RED),
-            ScoreStatus::Accepted => Span::styled(format!(" {score:>3.0} "), *GREEN),
-            ScoreStatus::PartialScore => Span::styled(format!(" {score:>3.0} "), *YELLOW),
+            ScoreStatus::WrongAnswer => Span::styled(format!(" {score:>3.0} "), RED),
+            ScoreStatus::Accepted => Span::styled(format!(" {score:>3.0} "), GREEN),
+            ScoreStatus::PartialScore => Span::styled(format!(" {score:>3.0} "), YELLOW),
         }
     } else {
         let has_skipped = sol_state
@@ -321,9 +321,9 @@ fn subtask_evaluation_status_text<'a>(
     let subtask = &solution.subtasks[&subtask_id];
     let par_style = if let Some(normalized_score) = subtask.normalized_score {
         match ScoreStatus::from_score(normalized_score, 1.0) {
-            ScoreStatus::Accepted => *GREEN,
-            ScoreStatus::WrongAnswer => *RED,
-            ScoreStatus::PartialScore => *YELLOW,
+            ScoreStatus::Accepted => GREEN,
+            ScoreStatus::WrongAnswer => RED,
+            ScoreStatus::PartialScore => YELLOW,
         }
     } else {
         Style::default()
@@ -352,7 +352,7 @@ fn testcase_evaluation_status_text<'a>(
         memory_limit,
         YELLOW_RESOURCE_THRESHOLD,
     ) {
-        Some(*ORANGE)
+        Some(ORANGE)
     } else {
         None
     };
@@ -361,17 +361,17 @@ fn testcase_evaluation_status_text<'a>(
         TestcaseEvaluationStatus::Solving => Span::raw(format!("{loading}")),
         TestcaseEvaluationStatus::Solved => Span::raw("s"),
         TestcaseEvaluationStatus::Checking => Span::raw(format!("{loading}")),
-        TestcaseEvaluationStatus::Accepted(_) => Span::styled("A", close_color.unwrap_or(*GREEN)),
-        TestcaseEvaluationStatus::WrongAnswer(_) => Span::styled("W", *RED),
-        TestcaseEvaluationStatus::Partial(_) => Span::styled("P", *YELLOW),
+        TestcaseEvaluationStatus::Accepted(_) => Span::styled("A", close_color.unwrap_or(GREEN)),
+        TestcaseEvaluationStatus::WrongAnswer(_) => Span::styled("W", RED),
+        TestcaseEvaluationStatus::Partial(_) => Span::styled("P", YELLOW),
         TestcaseEvaluationStatus::TimeLimitExceeded => {
-            Span::styled("T", close_color.unwrap_or(*RED))
+            Span::styled("T", close_color.unwrap_or(RED))
         }
-        TestcaseEvaluationStatus::WallTimeLimitExceeded => Span::styled("T", *RED),
+        TestcaseEvaluationStatus::WallTimeLimitExceeded => Span::styled("T", RED),
         TestcaseEvaluationStatus::MemoryLimitExceeded => {
-            Span::styled("M", close_color.unwrap_or(*RED))
+            Span::styled("M", close_color.unwrap_or(RED))
         }
-        TestcaseEvaluationStatus::RuntimeError => Span::styled("R", *RED),
+        TestcaseEvaluationStatus::RuntimeError => Span::styled("R", RED),
         TestcaseEvaluationStatus::Failed => Span::styled(
             "F",
             Style::default()

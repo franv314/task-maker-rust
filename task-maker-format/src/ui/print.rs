@@ -1,21 +1,21 @@
+use std::io;
+
+use anstream::AutoStream;
 use itertools::Itertools;
 use task_maker_dag::ExecutionStatus;
-use termcolor::{ColorChoice, ColorSpec, StandardStream};
 
 use crate::cwrite;
 use crate::terry::CaseStatus;
 use crate::ui::*;
 
-lazy_static! {
-    static ref ERROR: ColorSpec = RED.clone();
-    static ref SUCCESS: ColorSpec = GREEN.clone();
-    static ref WARNING: ColorSpec = YELLOW.clone();
-}
+const ERROR: Style = RED;
+const SUCCESS: Style = GREEN;
+const WARNING: Style = YELLOW;
 
 /// A simple UI that will print to stdout the human readable messages. Useful
 /// for debugging or for when curses is not available.
 pub struct PrintUI<State: UIStateT> {
-    stream: StandardStream,
+    stream: AutoStream<io::Stdout>,
     state: State,
 }
 
@@ -23,7 +23,7 @@ impl<State: UIStateT> PrintUI<State> {
     /// Make a new PrintUI.
     pub fn new(state: State) -> Self {
         PrintUI {
-            stream: StandardStream::stdout(ColorChoice::Auto),
+            stream: anstream::stdout(),
             state,
         }
     }

@@ -14,7 +14,7 @@ use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 use ratatui::backend::TermionBackend;
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::{Frame, Terminal};
@@ -31,44 +31,18 @@ pub(crate) const FPS: u64 = 30;
 /// After how many seconds rotate the list of workers if they don't fit on the screen.
 pub(crate) const ROTATION_DELAY: u64 = 1;
 
-macro_rules! define_color_inner {
-    ($color:expr,) => {
-        $color
-    };
-    ($color:expr, basic($basic:ident), $($tt:tt)*) => {
-        define_color_inner!($color.fg(Color::$basic), $($tt)*)
-    };
-    ($color:expr, rgb($r:expr, $g:expr, $b:expr), $($tt:tt)*) => {
-        define_color_inner!(if *$crate::ui::HAS_TRUECOLOR {
-            $color.fg(Color::Rgb($r, $g, $b))
-        } else {
-            $color
-        }, $($tt)*)
-    };
-    ($color:expr, bold, $($tt:tt)*) => {
-        define_color_inner!($color.add_modifier(Modifier::BOLD), $($tt)*)
-    };
-}
-macro_rules! define_color {
-    ($($tt:tt)*) => {
-        define_color_inner!(Style::default(), $($tt)*,)
-    };
-}
+#[allow(missing_docs)]
+pub mod colors {
+    use ratatui::style::{Color, Style};
 
-lazy_static! {
-    /// Green color.
-    pub static ref GREEN: Style = define_color!(basic(LightGreen), bold);
-    /// Red color.
-    pub static ref RED: Style = define_color!(basic(LightRed), bold);
-    /// Blue color.
-    pub static ref BLUE: Style = define_color!(basic(LightBlue), bold);
-    /// Yellow color.
-    pub static ref YELLOW: Style = define_color!(basic(LightYellow), bold);
-    /// Orange color.
-    pub static ref ORANGE: Style = define_color!(basic(Yellow), rgb(255, 165, 0), bold);
-    /// Bold.
-    pub static ref BOLD: Style = define_color!(bold);
+    pub const GREEN: Style = Style::new().light_green().bold();
+    pub const RED: Style = Style::new().light_red().bold();
+    pub const BLUE: Style = Style::new().light_blue().bold();
+    pub const YELLOW: Style = Style::new().light_yellow().bold();
+    pub const ORANGE: Style = Style::new().fg(Color::Rgb(255, 165, 0)).bold();
+    pub const BOLD: Style = Style::new().bold();
 }
+pub use colors::*;
 
 /// A generic animated UI for tasks, dynamically refreshing using curses as a backend.
 ///
@@ -256,16 +230,16 @@ pub(crate) fn compilation_status_text(status: &CompilationStatus, loading: char)
     match status {
         CompilationStatus::Pending => Span::raw("... "),
         CompilationStatus::Running => Span::raw(format!("{loading}   ")),
-        CompilationStatus::Done { .. } => Span::styled("OK  ", *GREEN),
-        CompilationStatus::Failed { .. } => Span::styled("FAIL", *RED),
-        CompilationStatus::Skipped => Span::styled("skip", *YELLOW),
+        CompilationStatus::Done { .. } => Span::styled("OK  ", GREEN),
+        CompilationStatus::Failed { .. } => Span::styled("FAIL", RED),
+        CompilationStatus::Skipped => Span::styled("skip", YELLOW),
     }
 }
 
 /// Render a block with the specified title.
 pub fn render_block<S: AsRef<str>>(frame: &mut Frame, rect: Rect, title: S) {
     let block = Block::default()
-        .title(Span::styled(title.as_ref(), *BLUE))
+        .title(Span::styled(title.as_ref(), BLUE))
         .borders(Borders::ALL);
     frame.render_widget(block, rect);
 }

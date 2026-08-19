@@ -1,21 +1,22 @@
 //! The UI functionality for the task formats.
 
 use std::collections::HashMap;
+use std::io;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
+use anstream::AutoStream;
 use anyhow::Error;
 pub use curses::{inner_block, render_block, render_server_status, CursesDrawer, CursesUI};
 use itertools::Itertools;
 pub use json::JsonUI;
+use owo_colors::Style;
 pub use print::PrintUI;
 pub use raw::RawUI;
 use serde::{Deserialize, Serialize};
 pub use silent::SilentUI;
 use task_maker_dag::{ExecutionResourcesUsage, ExecutionResult, ExecutionStatus, WorkerUuid};
 use task_maker_diagnostics::DiagnosticContext;
-pub use termcolor::WriteColor;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream};
 pub use ui_message::UIMessage;
 
 use crate::{cwrite, cwriteln};
@@ -32,80 +33,19 @@ pub type UIChannelSender = Sender<UIMessage>;
 /// Channel type for receiving `UIMessage`s.
 pub type UIChannelReceiver = Receiver<UIMessage>;
 
-lazy_static! {
-    /// Whether the terminal supports ANSI 256 colors.
-    static ref HAS_ANSI256: bool = {
-        if std::env::var("TM_ANSI256").as_deref() == Ok("true") {
-            if let Some(support) = supports_color::on(supports_color::Stream::Stdout) {
-                support.has_256
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    };
-    /// Whetner the terminal supports 24-bit Truecolor.
-    static ref HAS_TRUECOLOR: bool = {
-        if let Some(support) = supports_color::on(supports_color::Stream::Stdout) {
-            support.has_16m
-        } else {
-            false
-        }
-    };
-}
+#[allow(missing_docs)]
+pub mod colors {
+    use owo_colors::Style;
 
-macro_rules! define_color_inner {
-    ($color:expr,) => {};
-    ($color:expr, ansi($ansi:expr), $($tt:tt)*) => {
-        if *HAS_ANSI256 {
-            $color.set_fg(Some(Color::Ansi256($ansi)));
-        }
-        define_color_inner!($color, $($tt)*)
-    };
-    ($color:expr, rgb($r:expr, $g:expr, $b:expr), $($tt:tt)*) => {
-        if *HAS_TRUECOLOR {
-            $color.set_fg(Some(Color::Rgb($r, $g, $b)));
-        }
-        define_color_inner!($color, $($tt)*)
-    };
-    ($color:expr, basic($basic:ident), $($tt:tt)*) => {
-        $color.set_fg(Some(Color::$basic));
-        define_color_inner!($color, $($tt)*)
-    };
-    ($color:expr, intense, $($tt:tt)*) => {
-        $color.set_intense(true);
-        define_color_inner!($color, $($tt)*)
-    };
-    ($color:expr, bold, $($tt:tt)*) => {
-        $color.set_bold(true);
-        define_color_inner!($color, $($tt)*)
-    };
+    pub const RED: Style = Style::new().bright_red().bold();
+    pub const SOFT_RED: Style = Style::new().bright_red();
+    pub const GREEN: Style = Style::new().bright_green().bold();
+    pub const YELLOW: Style = Style::new().bright_yellow().bold();
+    pub const ORANGE: Style = Style::new().fg_rgb::<255, 165, 0>().bold();
+    pub const BLUE: Style = Style::new().bright_blue().bold();
+    pub const BOLD: Style = Style::new().bold();
 }
-macro_rules! define_color {
-    ($($tt:tt)*) => {{
-        let mut color = ColorSpec::new();
-        define_color_inner!(color, $($tt)*,);
-        color
-    }};
-}
-
-lazy_static! {
-    /// The RED color to use with `cwrite!` and `cwriteln!`
-    pub static ref RED: ColorSpec = define_color!(basic(Red), ansi(196), intense, bold);
-    /// The RED color to use with `cwrite!` and `cwriteln!`, without bold.
-    pub static ref SOFT_RED: ColorSpec = define_color!(basic(Red), ansi(196), intense);
-    /// The GREEN color to use with `cwrite!` and `cwriteln!`
-    pub static ref GREEN: ColorSpec = define_color!(basic(Green), ansi(118), intense, bold);
-    /// The YELLOW color to use with `cwrite!` and `cwriteln!`
-    pub static ref YELLOW: ColorSpec = define_color!(basic(Yellow), ansi(226), intense, bold);
-    /// The ORANGE color to use with `cwrite!` and `cwriteln!`.
-    pub static ref ORANGE: ColorSpec = define_color!(basic(Yellow), ansi(214), rgb(255, 165, 0), intense, bold);
-    /// The BLUE color to use with `cwrite!` and `cwriteln!`
-    pub static ref BLUE: ColorSpec = define_color!(basic(Blue), ansi(33), intense, bold);
-    /// The bold style to use with `cwrite!` and `cwriteln!`
-    pub static ref BOLD: ColorSpec = define_color!(bold);
-}
+pub use colors::*;
 
 /// The status of an execution.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -212,12 +152,12 @@ pub trait FinishUI<State> {
 /// Collection of utilities for drawing the finish UI.
 pub struct FinishUIUtils<'a> {
     /// Stream where to print to.
-    stream: &'a mut StandardStream,
+    stream: &'a mut AutoStream<io::Stdout>,
 }
 
 impl<'a> FinishUIUtils<'a> {
     /// Make a new `FinishUIUtils` borrowing a `StandardStream`.
-    pub fn new(stream: &'a mut StandardStream) -> FinishUIUtils<'a> {
+    pub fn new(stream: &'a mut AutoStream<io::Stdout>) -> FinishUIUtils<'a> {
         FinishUIUtils { stream }
     }
 
@@ -377,72 +317,45 @@ impl std::str::FromStr for UIType {
 #[allow(dead_code)]
 pub struct StdoutPrinter {
     /// The actual stream.
-    pub stream: StandardStream,
+    pub stream: AutoStream<io::Stdout>,
 }
 
 impl Default for StdoutPrinter {
     fn default() -> Self {
         Self {
-            stream: StandardStream::stdout(ColorChoice::Auto),
+            stream: anstream::stdout(),
         }
     }
 }
 
 /// Write to `$self.stream`, in the color specified as second parameter. The arguments that follow
 /// will be passed to `write!`.
-///
-/// ```
-/// #[macro_use]
-/// extern crate task_maker_format;
-///
-/// use termcolor::{ColorSpec, ColorChoice};
-/// use task_maker_format::ui::StdoutPrinter;
-/// use task_maker_format::cwrite;
-///
-/// # fn main() {
-/// let mut color = ColorSpec::new();
-/// color.set_bold(true);
-///
-/// let mut printer = StdoutPrinter::default();
-/// cwrite!(printer, color, "The output is {}", 42);
-/// # }
-/// ```
 #[macro_export]
 macro_rules! cwrite {
     ($self:expr, $color:expr, $($arg:tt)*) => {{
         use std::io::Write;
-        use $crate::ui::WriteColor;
-        $self.stream.set_color(&$color).unwrap();
-        write!(&mut $self.stream, $($arg)*).unwrap();
-        $self.stream.reset().unwrap();
+        use $crate::owo_colors::OwoColorize;
+        write!(
+            &mut $self.stream,
+            "{}",
+            format_args!($($arg)*).style($color)
+        )
+        .unwrap();
     }};
 }
 
 /// Write to `$self.stream`, in the color specified as second parameter. The arguments that follow
 /// will be passed to `writeln!`.
-///
-/// ```
-/// #[macro_use]
-/// extern crate task_maker_format;
-/// use termcolor::{ColorSpec, ColorChoice};
-/// use task_maker_format::ui::StdoutPrinter;
-/// use task_maker_format::cwrite;
-///
-/// # fn main() {
-/// let mut color = ColorSpec::new();
-/// color.set_bold(true);
-///
-/// let mut printer = StdoutPrinter::default();
-/// cwriteln!(printer, color, "The output is {}", 42);
-/// # }
-/// ```
 #[macro_export]
 macro_rules! cwriteln {
     ($self:expr, $color:expr, $($arg:tt)*) => {{
         use std::io::Write;
-        use $crate::ui::WriteColor;
-        $self.stream.set_color(&$color).unwrap();
-        writeln!(&mut $self.stream, $($arg)*).unwrap();
-        $self.stream.reset().unwrap();
+        use $crate::owo_colors::OwoColorize;
+        writeln!(
+            &mut $self.stream,
+            "{}",
+            format_args!($($arg)*).style($color)
+        )
+        .unwrap();
     }};
 }
