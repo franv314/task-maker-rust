@@ -317,7 +317,9 @@ pub(super) fn parse(
                 id,
                 TestcaseInfo {
                     id,
-                    input_generator: InputGenerator::StaticFile(samples.path(&config.name, i)),
+                    input_generator: InputGenerator::StaticFile(
+                        task_dir.join(samples.path(&config.name, i)),
+                    ),
                     output_generator: output_generator.clone(),
                     input_file: None,
                     official_output_file: None,
@@ -349,7 +351,7 @@ pub(super) fn parse(
                 id,
                 TestcaseInfo {
                     id,
-                    input_generator: InputGenerator::StaticFile(c.clone()),
+                    input_generator: InputGenerator::StaticFile(task_dir.join(c)),
                     output_generator: output_generator.clone(),
                     input_file: None,
                     official_output_file: None,
